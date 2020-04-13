@@ -1,27 +1,39 @@
-# Python SQL toolkit and Object Relational Mapper
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, inspect, func
-from flask import Flask, jsonify
+
 import datetime as dt
 import numpy as np
 
+from flask import Flask, jsonify
+#################################################
+# Database Setup
+#################################################
+
 engine = create_engine("sqlite:///Resources/hawaii.sqlite", echo=False)
-### Explore Database
+
+# reflect an existing database into a new model
 
 Base = automap_base()
 Base.prepare(engine, reflect=True)
 Base.classes.keys()
 
+# Save reference to the table
 Measurement = Base.classes.measurement
 Station = Base.classes.station
 
 session = Session(engine)
 
+#################################################
+# Flask Setup
+#################################################
 
 app = Flask(__name__)
 
+#################################################
+# Flask Routes
+#################################################
 
 @app.route("/")
 def Home():
