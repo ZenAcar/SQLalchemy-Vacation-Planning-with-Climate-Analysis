@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, inspect, func
 
 import datetime as dt
 import numpy as np
+import pandas as pd
 
 from flask import Flask, jsonify
 #################################################
@@ -43,8 +44,8 @@ def Home():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/start_end"
+        f"/api/v1.0/start<br/>"
+        f"/api/v1.0/start/end"
     )
 
 
@@ -67,9 +68,10 @@ def precipitation():
 @app.route("/api/v1.0/stations")
 def stations():
     """JSON list of stations from the dataset."""
-    station = session.query(Station.station).all()
-    station_list = list(np.ravel(station))
-    return jsonify(station_list)
+    session = Session(engine)
+    station = session.query(Station.name, Station.station).all()
+    session.close()
+    return jsonify(station)
 
 
 
@@ -79,38 +81,58 @@ def tobs():
     last_year = dt.date(2017, 8, 23) - dt.timedelta(365)
     session = Session(engine)
     station_temp_obsrv=(session
-                        .query(Measurement.tobs)
-                        .filter(Measurement.station == "USC00519281")
-                        .filter(Measurement.date >= last_year)
-                        .all()
-                        )
+                    .query(Measurement.date, Measurement.tobs)
+                    .filter(Measurement.station == "USC00519281")
+                    .filter(Measurement.date >= last_year)
+                    .all()
+                    )
+    sto_list = []
+    for row in station_temp_obsrv:
+        dict_list = {}
+        dict_list["date"] = row[0]
+        dict_list["prcp"] = row[1]
+        sto_list.append(dict_list)
     session.close()
-    return jsonify(station_temp_obsrv)
-
+    
+    return jsonify(sto_list)
+   
 
 @app.route("/api/v1.0/<start>")
-def startdate(start):
-    session = Session(engine)
-    result = (
-        session.query(
-            func.min(Measurement.tobs),
-            func.avg(Measurement.tobs),
-            func.max(Measurement.tobs),
+def start_date(start_date):
+    session = Session(engine) 
+    start_guery= (
+            session
+            .query(
+                func.min(Measurement.tobs), 
+                func.avg(Measurement.tobs), 
+                func.max(Measurement.tobs)
+            )
+            .filter(Measurement.date >= start_date)
+            .all()
         )
-        .filter(Measurement.date >= start)
-        .all()
-    )
     session.close()
-    return jsonify(startdate)
+
+    return jsonify(start_query)
 
 
-@app.route("/api/v1.0/start_end")
-def start_and_end(start_end):
-    session = Session(engine)
-    results = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
-    filter(Measurement.date > start, Measurement.date < end).all()
+
+@app.route("/api/v1.0/<start>/<end>")
+def start_end_date(start_date, end_date):
+    session = Session(engine) 
+    start_end_guery= (
+            session
+            .query(
+                func.min(Measurement.tobs), 
+                func.avg(Measurement.tobs), 
+                func.max(Measurement.tobs)
+            )
+            .filter(Measurement.date >= start_date)
+            .filter(Measurement.date <= end_date)
+            .all()
+        )
     session.close()
-    return jsonify(results)
+
+    return jsonify(start_end_guery)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=9999)
+    app.run(debug=True)
