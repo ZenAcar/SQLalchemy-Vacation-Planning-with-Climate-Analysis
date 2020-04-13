@@ -1,42 +1,104 @@
-import numpy as np
-
+# Python SQL toolkit and Object Relational Mapper
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, func
-
+from sqlalchemy import create_engine, inspect, func
 from flask import Flask, jsonify
+import datetime as dt
+import numpy as np
+
+engine = create_engine("sqlite:///Resources/hawaii.sqlite", echo=False)
+### Explore Database
+
+Base = automap_base()
+Base.prepare(engine, reflect=True)
+Base.classes.keys()
+
+Measurement = Base.classes.measurement
+Station = Base.classes.station
+
+session = Session(engine)
+
 
 app = Flask(__name__)
 
-Routes
 
-/
+@app.route("/")
+def Home():
+    """List available API routes."""
+    return (
+        f"List available API routes.<br/>"
+        f"/api/v1.0/precipitation<br/>"
+        f"/api/v1.0/stations<br/>"
+        f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/<start><br/>"
+        f"/api/v1.0/start_end"
+    )
 
-Home page.
 
-List all routes that are available.
+@app.route("/api/v1.0/precipitation")
+def precipitation():
+    """The query results to a dictionary using date as the key and prcp as the value."""
+    last_year = dt.date(2017, 8, 23) - dt.timedelta(365)    
+    session = Session(engine)
+    prcp_query = (session
+                .query(Measurement.date, Measurement.prcp)
+                .filter(Measurement.date>dt.datetime(2016, 8, 23))
+                .all())
+    session.close()
+    prcp_dict = {}
+    for data in prcp_query:
+        prcp_dict[data[0]] = data[1]
+    return jsonify(prcp_dict)
 
-/api/v1.0/precipitation
 
-Convert the query results to a dictionary using date as the key and prcp as the value.
+@app.route("/api/v1.0/stations")
+def stations():
+    """JSON list of stations from the dataset."""
+    station = session.query(Station.station).all()
+    station_list = list(np.ravel(station))
+    return jsonify(station_list)
 
-Return the JSON representation of your dictionary.
 
-/api/v1.0/stations
 
-Return a JSON list of stations from the dataset.
-/api/v1.0/tobs
+@app.route("/api/v1.0/tobs")
+def tobs():
+    """The dates and temperature observations of the most active station for the last year of data."""
+    last_year = dt.date(2017, 8, 23) - dt.timedelta(365)
+    session = Session(engine)
+    station_temp_obsrv=(session
+                        .query(Measurement.tobs)
+                        .filter(Measurement.station == "USC00519281")
+                        .filter(Measurement.date >= last_year)
+                        .all()
+                        )
+    session.close()
+    return jsonify(station_temp_obsrv)
 
-Query the dates and temperature observations of the most active station for the last year of data.
 
-Return a JSON list of temperature observations (TOBS) for the previous year.
+@app.route("/api/v1.0/<start>")
+def startdate(start):
+    session = Session(engine)
+    result = (
+        session.query(
+            func.min(Measurement.tobs),
+            func.avg(Measurement.tobs),
+            func.max(Measurement.tobs),
+        )
+        .filter(Measurement.date >= start)
+        .all()
+    )
+    session.close()
+    return jsonify(startdate)
 
-/api/v1.0/<start> and /api/v1.0/<start>/<end>
 
-Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start or start-end range.
+@app.route("/api/v1.0/start_end")
+def start_and_end(start_end):
+    session = Session(engine)
+    results = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+    filter(Measurement.date > start, Measurement.date < end).all()
+    session.close()
+    return jsonify(results)
 
-When given the start only, calculate TMIN, TAVG, and TMAX for all dates greater than and equal to the start date.
-
-When given the start and the end date, calculate the TMIN, TAVG, and TMAX for dates between the start and end date inclusive.
-
+if __name__ == "__main__":
+    app.run(debug=True, port=9999)
