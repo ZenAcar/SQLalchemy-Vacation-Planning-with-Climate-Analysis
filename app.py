@@ -60,7 +60,7 @@ def precipitation():
     prcp_query = (
         session
         .query(Measurement.date, Measurement.prcp)
-        .filter(Measurement.date>dt.datetime(2016, 8, 23))
+        .filter(Measurement.date>=last_year)
         .all()
         )
     session.close()
