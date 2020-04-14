@@ -78,6 +78,7 @@ def stations():
     session = Session(engine)
     station = session.query(Station.name, Station.station).all()
     session.close()
+    
     return jsonify(station)
 
 
