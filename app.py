@@ -120,7 +120,7 @@ def start_date(start_date):
         )
     session.close()
 
-    return jsonify(start_query)
+    return jsonify(start_guery)
 
 
 
