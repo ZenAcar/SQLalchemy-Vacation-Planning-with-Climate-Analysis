@@ -12,17 +12,20 @@ from flask import Flask, jsonify
 # Database Setup
 #################################################
 
-engine = create_engine("sqlite:///Resources/hawaii.sqlite", echo=False)
+engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 
 # reflect an existing database into a new model
 
 Base = automap_base()
+
+# reflect the tables
+
 Base.prepare(engine, reflect=True)
-Base.classes.keys()
 
 # Save reference to the table
 Measurement = Base.classes.measurement
 Station = Base.classes.station
+
 
 session = Session(engine)
 
@@ -54,14 +57,18 @@ def precipitation():
     """The query results to a dictionary using date as the key and prcp as the value."""
     last_year = dt.date(2017, 8, 23) - dt.timedelta(365)    
     session = Session(engine)
-    prcp_query = (session
-                .query(Measurement.date, Measurement.prcp)
-                .filter(Measurement.date>dt.datetime(2016, 8, 23))
-                .all())
+    prcp_query = (
+        session
+        .query(Measurement.date, Measurement.prcp)
+        .filter(Measurement.date>dt.datetime(2016, 8, 23))
+        .all()
+        )
     session.close()
+    
     prcp_dict = {}
     for data in prcp_query:
         prcp_dict[data[0]] = data[1]
+    
     return jsonify(prcp_dict)
 
 
@@ -72,7 +79,6 @@ def stations():
     station = session.query(Station.name, Station.station).all()
     session.close()
     return jsonify(station)
-
 
 
 @app.route("/api/v1.0/tobs")
@@ -86,13 +92,14 @@ def tobs():
                     .filter(Measurement.date >= last_year)
                     .all()
                     )
+    session.close()
+
     sto_list = []
     for row in station_temp_obsrv:
         dict_list = {}
         dict_list["date"] = row[0]
         dict_list["prcp"] = row[1]
         sto_list.append(dict_list)
-    session.close()
     
     return jsonify(sto_list)
    
