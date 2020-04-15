@@ -26,7 +26,9 @@ Base.prepare(engine, reflect=True)
 Measurement = Base.classes.measurement
 Station = Base.classes.station
 
-
+#################################################
+# Create Session
+#################################################
 session = Session(engine)
 
 #################################################
@@ -40,15 +42,15 @@ app = Flask(__name__)
 #################################################
 
 @app.route("/")
-def Home():
+def welcome():
     """List available API routes."""
     return (
         f"List available API routes.<br/>"
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/start<br/>"
-        f"/api/v1.0/start/end"
+        f"/api/v1.0/<start></br>"
+        f"/api/v1.0/<start>/<end>"
     )
 
 
@@ -65,11 +67,13 @@ def precipitation():
         )
     session.close()
     
-    prcp_dict = {}
+    precipitation_list=[]
     for data in prcp_query:
+        prcp_dict = {}
         prcp_dict[data[0]] = data[1]
+        precipitation_list.append(prcp_dict)
     
-    return jsonify(prcp_dict)
+    return jsonify(precipitation_list)
 
 
 @app.route("/api/v1.0/stations")
@@ -96,17 +100,17 @@ def tobs():
     session.close()
 
     sto_list = []
-    for row in station_temp_obsrv:
-        dict_list = {}
-        dict_list["date"] = row[0]
-        dict_list["prcp"] = row[1]
-        sto_list.append(dict_list)
+    for data in station_temp_obsrv:
+        sto_dict = {}
+        sto_dict["date"] = data[0]
+        sto_dict["prcp"] = data[1]
+        sto_list.append(sto_dict)
     
     return jsonify(sto_list)
    
 
 @app.route("/api/v1.0/<start>")
-def start_date(start_date):
+def start_date(start=None):
     session = Session(engine) 
     start_guery= (
             session
@@ -120,7 +124,15 @@ def start_date(start_date):
         )
     session.close()
 
-    return jsonify(start_guery)
+    temp_list = []
+    for Tmin, Tavg, Tmax in start_guery:
+        temp_dict = {}
+        temp_dict["Min Temp"] = Tmin
+        temp_dict["Max Temp"] = Tmax
+        temp_dict["Avg Temp"] = Tavg
+        temp_list.append(temp_dict)
+ 
+    return jsonify(temp_list)
 
 
 
@@ -140,7 +152,15 @@ def start_end_date(start_date, end_date):
         )
     session.close()
 
-    return jsonify(start_end_guery)
+    start_end_list =[]
+    for Tmin, Tavg, Tmax in start_end_guery:
+        start_end_dict = {}
+        start_end_dict["Min Temp"] = Tmin
+        start_end_dict["Max Temp"] = Tmax
+        start_end_dict["Avg Temp"] = Tavg
+        start_end_list.append(start_end_dict)
+
+    return jsonify(start_end_list)
 
 if __name__ == "__main__":
     app.run(debug=True)
