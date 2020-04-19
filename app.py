@@ -49,8 +49,7 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start></br>"
-        f"/api/v1.0/<start>/<end>"
+        f"/api/v1.0/start/end"
     )
 
 
@@ -58,14 +57,14 @@ def welcome():
 def precipitation():
     """The query results to a dictionary using date as the key and prcp as the value."""
     last_year = dt.date(2017, 8, 23) - dt.timedelta(365)    
-    session = Session(engine)
+    
     prcp_query = (
         session
         .query(Measurement.date, Measurement.prcp)
         .filter(Measurement.date>=last_year)
         .all()
         )
-    session.close()
+  
     
     precipitation_list=[]
     for data in prcp_query:
@@ -79,9 +78,9 @@ def precipitation():
 @app.route("/api/v1.0/stations")
 def stations():
     """JSON list of stations from the dataset."""
-    session = Session(engine)
+    
     station = session.query(Station.name, Station.station).all()
-    session.close()
+    
     
     return jsonify(station)
 
@@ -90,14 +89,14 @@ def stations():
 def tobs():
     """The dates and temperature observations of the most active station for the last year of data."""
     last_year = dt.date(2017, 8, 23) - dt.timedelta(365)
-    session = Session(engine)
+    
     station_temp_obsrv=(session
                     .query(Measurement.date, Measurement.tobs)
                     .filter(Measurement.station == "USC00519281")
                     .filter(Measurement.date >= last_year)
                     .all()
                     )
-    session.close()
+ 
 
     sto_list = []
     for data in station_temp_obsrv:
@@ -109,58 +108,34 @@ def tobs():
     return jsonify(sto_list)
    
 
-@app.route("/api/v1.0/<start>")
-def start_date(start=None):
-    session = Session(engine) 
-    start_guery= (
-            session
-            .query(
-                func.min(Measurement.tobs), 
-                func.avg(Measurement.tobs), 
-                func.max(Measurement.tobs)
-            )
-            .filter(Measurement.date >= start_date)
-            .all()
-        )
-    session.close()
 
-    temp_list = []
-    for Tmin, Tavg, Tmax in start_guery:
-        temp_dict = {}
-        temp_dict["Min Temp"] = Tmin
-        temp_dict["Max Temp"] = Tmax
-        temp_dict["Avg Temp"] = Tavg
-        temp_list.append(temp_dict)
- 
-    return jsonify(temp_list)
+@app.route("/api/v1.0/temp/<start>")
+@app.route("/api/v1.0/temp/<start>/<end>")
+def stats(start=None, end=None):
+    """Return TMIN, TAVG, TMAX."""
 
+    # Select statement
+    sel = [
+        func.min(Measurement.tobs), 
+        func.avg(Measurement.tobs), 
+        func.max(Measurement.tobs)
+        ]
 
+    if not end:
+        # calculate TMIN, TAVG, TMAX for dates greater than start
+        results = session.query(*sel).\
+            filter(Measurement.date >= start).all()
+        # Unravel results into a 1D array and convert to a list
+        temps = list(np.ravel(results))
+        return jsonify(temps)
 
-@app.route("/api/v1.0/<start>/<end>")
-def start_end_date(start_date, end_date):
-    session = Session(engine) 
-    start_end_guery= (
-            session
-            .query(
-                func.min(Measurement.tobs), 
-                func.avg(Measurement.tobs), 
-                func.max(Measurement.tobs)
-            )
-            .filter(Measurement.date >= start_date)
-            .filter(Measurement.date <= end_date)
-            .all()
-        )
-    session.close()
-
-    start_end_list =[]
-    for Tmin, Tavg, Tmax in start_end_guery:
-        start_end_dict = {}
-        start_end_dict["Min Temp"] = Tmin
-        start_end_dict["Max Temp"] = Tmax
-        start_end_dict["Avg Temp"] = Tavg
-        start_end_list.append(start_end_dict)
-
-    return jsonify(start_end_list)
+    # calculate TMIN, TAVG, TMAX with start and stop
+    results = session.query(*sel).\
+        filter(Measurement.date >= start).\
+        filter(Measurement.date <= end).all()
+    # Unravel results into a 1D array and convert to a list
+    temps = list(np.ravel(results))
+    return jsonify(temps)
 
 if __name__ == "__main__":
     app.run(debug=True)
