@@ -29,7 +29,7 @@ Pandas.
 * Design a query to retrieve the last 12 months of temperature observation data (TOBS).
 
 
-![station-histogram](Images/station-histogram.png)
+![station-histogram](Output/temp-hist.png)
 
 
 ### Temperature Analysis I
@@ -45,7 +45,7 @@ Pandas.
 
 The minimum, average and maximum temperatures for the trip are calculated using the previous years temperature data for those same dates. A bar chart is plotted with the average temperature for the y value and the peak-to-peak (tmax-tmin) value as the y error bar (yerr).
 
-![temperature](Images/temperature.png)
+![temperature](Output/trip_avg_temp.png)
 
 
 ### Daily Rainfall Average
@@ -54,7 +54,7 @@ The minimum, average and maximum temperatures for the trip are calculated using 
 
 * Calculate the daily normals (the min, avg, and max temperatures).
 
-![daily-normals](Images/daily-normals.png)
+![daily-normals](Output/daily_normals.png)
 
 
 - - -
