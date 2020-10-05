@@ -16,7 +16,7 @@ SQLAlchemy is used to connect to the sqlite database and reflect the tables into
 A query is designed to retrieve the last 12 months of precipitation data and the results are plotted with 
 Pandas.
 
-![precipitation](Images/Precipitation.png)
+![precipitation](Output/Precipitation.png)
 
 
 ### Station Analysis
