@@ -29,7 +29,7 @@ Pandas.
 * Design a query to retrieve the last 12 months of temperature observation data (TOBS).
 
 
-![station-histogram](Output/temp-hist.png)
+![station-histogram](Output/temp_hist.png)
 
 
 ### Temperature Analysis I
