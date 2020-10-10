@@ -10,19 +10,6 @@ import pandas as pd
 
 from flask import Flask, jsonify
 
-
-
-# import numpy as np
-# import datetime as dt
-
-# import sqlalchemy
-# from sqlalchemy.ext.automap import automap_base
-# from sqlalchemy.orm import Session
-# from sqlalchemy import create_engine, func, distinct
-
-# from flask import Flask, jsonify
-# from datetime import datetime
-
 #################################################
 # Database Setup
 #################################################
@@ -65,15 +52,14 @@ def welcome():
         f"<i>Usage: Append /api/v1.0/stations to the URL </i></li><br/>"
         f"<li><a href='http://127.0.0.1:5000/api/v1.0/tobs'>Temperature observations of the most active station for the previous year </a><br/>"
         f"<i>Usage: Append /api/v1.0/tobs to the URL </i></li><br/>"
-        f"<li><a href='http://127.0.0.1:5000/api/v1.0/2015-01-01'>Minimum, average and maximum temperatures for a given start date, as 2010-01-01</a><br/>"
+        f"<li><a href='http://127.0.0.1:5000/api/v1.0/2017-08-10'>Minimum, average and maximum temperatures for a given start date, as 2010-01-01</a><br/>"
         f"<i>Usage: Append a start date to URL such as /api/v1.0/startdate<br/>"
         f"Enter dates only between 2010-01-01 and 2017-08-23 </i></li><br/>"
-        f"<li><a href='http://127.0.0.1:5000/api/v1.0/2015-01-01/2015-01-10'>Minimum, average and maximum temperatures for a given date range, as 2010-01-01/2010-01-10</a><br/>"
+        f"<li><a href='http://127.0.0.1:5000/api/v1.0/2017-08-10/2017-08-20'>Minimum, average and maximum temperatures for a given date range, as 2010-01-01/2010-01-10</a><br/>"
         f"<i>Usage: Append start and end dates to URL such as /api/v1.0/startdate/enddate<br/>"
         f"Enter dates only between 2010-01-01 and 2017-08-23</i></li><br/>"
         f"</ul>"
     )
-
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
@@ -172,8 +158,6 @@ def temp_date(start):
 
         return jsonify(temps_dict)
 
-
-
 @app.route("/api/v1.0/<start>/<end>")
 def temp_date_range(start,end):
     
@@ -224,8 +208,6 @@ def temp_date_range(start,end):
 
         return jsonify(temps_dict)
         #return jsonify(temp_stats)
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
